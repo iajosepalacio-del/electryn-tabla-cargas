@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Tabla de cargas — ELECTRYN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --navy: #10263f;
+        --navy-2: #16324f;
+        --ink: #22303f;
+        --muted: #75828f;
+        --page-bg: #e9edf1;
+        --card-bg: #ffffff;
+        --row-alt: #f6f8fa;
+        --line: #e3e8ec;
+        --input-bg: #f2f4f6;
+        --input-border: #d7dde2;
+        --calc-bg: #eceff2;
+        --ok: #3d9950;
+        --ok-bg: #f2faf3;
+        --missing: #e0655f;
+        --missing-soft: #eda49f;
+        --focus: #f0a13c;
+        --amber: #b26a12;
+        --amber-bg: #f8f1de;
+        --green-btn: #2e7d4f;
+        --green-btn-hover: #276b43;
+        --wa: #1faa55;
+        --wa-hover: #178f47;
+        --del-bg: #fdecec;
+        --del-ink: #d64545;
+        --help-bg: #f2f7fc;
+        --help-line: #9db8d2;
+        --badge-bg: #e8edf1;
+        --head-ink: #5d6d7c;
+        --shadow: 0 10px 30px rgba(16, 38, 63, .12);
+        --dd-shadow: 0 14px 34px rgba(16, 38, 63, .22);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e6edf3;
+          --muted: #93a3b1;
+          --page-bg: #0d141b;
+          --card-bg: #16212c;
+          --row-alt: #1a2733;
+          --line: #26343f;
+          --input-bg: #1e2c38;
+          --input-border: #33434f;
+          --calc-bg: #232f3b;
+          --ok-bg: #17301d;
+          --amber-bg: #33270f;
+          --help-bg: #152433;
+          --help-line: #3c5a78;
+          --badge-bg: #24333f;
+          --head-ink: #9db0bf;
+          --del-bg: #3d1d1d;
+          --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+          --dd-shadow: 0 14px 34px rgba(0, 0, 0, .55);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--page-bg);
+        color: var(--ink);
+        line-height: 1.4;
+      }
+      button, select, input { font: inherit; color: inherit; }
+      button, [role="button"], select, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+
+      .wrap { max-width: 920px; margin: 0 auto; padding: 18px 14px 40px; }
+
+      /* ---------- Cards / step headers ---------- */
+      .card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        margin-bottom: 22px;
+      }
+      .card-head {
+        background: linear-gradient(180deg, var(--navy-2), var(--navy));
+        color: #fff;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .step-num {
+        flex: 0 0 auto;
+        width: 38px; height: 38px;
+        border: 3px solid rgba(255,255,255,.85);
+        border-radius: 50%;
+        display: grid; place-items: center;
+        font-weight: 900; font-size: 1.15rem;
+        background: rgba(255,255,255,.08);
+      }
+      .card-head h2 { margin: 0; font-size: 1.45rem; font-weight: 900; letter-spacing: .01em; }
+      .card-head p { margin: 0; color: #b9c9d8; font-weight: 600; font-size: 1.02rem; }
+      .card-body { padding: 18px; }
+
+      /* ---------- Step 1: contact ---------- */
+      .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+      .field label { display: block; font-weight: 800; font-size: .86rem; margin-bottom: 5px; color: var(--ink); }
+      .field input, .field select {
+        width: 100%;
+        background: var(--input-bg);
+        border: 2px solid var(--input-border);
+        border-radius: 9px;
+        padding: 8px 11px;
+        font-weight: 700;
+        outline: none;
+      }
+      .field input:focus, .field select:focus { border-color: var(--focus); background: var(--card-bg); }
+      .field input.err { border-color: var(--missing); }
+
+      /* ---------- Table ---------- */
+      .thead, .trow {
+        display: grid;
+        grid-template-columns: 42px minmax(150px, 1.75fr) 80px 64px 64px 92px 82px 84px 96px 46px;
+        align-items: center;
+        column-gap: 8px;
+        padding: 0 14px;
+      }
+      .thead {
+        padding-top: 12px; padding-bottom: 8px;
+        font-size: .78rem; font-weight: 900; letter-spacing: .04em;
+        color: var(--head-ink); text-transform: uppercase;
+      }
+      .thead .r, .trow .calc { text-align: center; }
+      .trow { padding-top: 7px; padding-bottom: 7px; border-top: 1px solid var(--line); }
+      .trow:nth-child(even) { background: var(--row-alt); }
+      .num-badge {
+        width: 30px; height: 30px; border-radius: 50%;
+        background: var(--badge-bg); color: var(--head-ink);
+        display: grid; place-items: center; font-weight: 900; font-size: .95rem;
+      }
+      .flabel { display: none; }
+
+      .trow input, .trow select {
+        width: 100%;
+        background: var(--input-bg);
+        border: 2px solid var(--input-border);
+        border-radius: 9px;
+        padding: 6px 8px;
+        font-weight: 700;
+        text-align: center;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+      .trow input[type="number"]::-webkit-outer-spin-button,
+      .trow input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      .trow input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+      .trow input.f-desc { text-align: left; font-weight: 800; padding-right: 38px; }
+      .dd-toggle {
+        position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+        width: 32px; height: 32px; min-height: 32px; padding: 0;
+        border: none; border-radius: 8px; background: transparent;
+        display: grid; place-items: center; cursor: pointer; color: var(--amber);
+      }
+      .dd-toggle:hover { background: var(--amber-bg); }
+      .dd-toggle svg { width: 15px; height: 10px; transition: transform .15s ease; }
+      .dd-toggle.open svg { transform: rotate(180deg); }
+      .trow input::placeholder { color: var(--muted); font-weight: 700; }
+      .trow input:focus, .trow select:focus { border-color: var(--focus); background: var(--card-bg); }
+      .trow input.ok { border-color: var(--ok); background: var(--ok-bg); }
+      .trow input.missing { border-color: var(--missing); }
+      .trow input.missing-soft { border-color: var(--missing-soft); }
+      .trow input:disabled { color: var(--muted); background: var(--calc-bg); border-color: var(--input-border); }
+      .trow select.f-motor {
+        text-align: left; padding-right: 24px; font-weight: 800; cursor: pointer;
+        background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2375828f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 9px center;
+      }
+      .calc {
+        background: var(--calc-bg); border-radius: 9px;
+        font-weight: 900; font-size: 1.02rem;
+        padding: 8px 4px; text-align: center;
+      }
+      .btn-del {
+        width: 38px; height: 38px; border: none; border-radius: 9px;
+        background: var(--del-bg); color: var(--del-ink);
+        display: grid; place-items: center; cursor: pointer; padding: 0;
+      }
+      .btn-del:hover { filter: brightness(.96); }
+      .btn-del svg { width: 15px; height: 15px; }
+
+      /* ---------- Catalog dropdown ---------- */
+      .desc-wrap { position: relative; }
+      .dropdown {
+        position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
+        width: 320px; max-width: calc(100vw - 40px);
+        max-height: 380px; overflow-y: auto;
+        background: var(--card-bg);
+        border: 1.5px solid var(--input-border);
+        border-radius: 12px;
+        box-shadow: var(--dd-shadow);
+        padding: 6px 0 8px;
+      }
+      .dd-cat {
+        width: 100%; border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; gap: 7px;
+        padding: 8px 14px; min-height: 2.25rem;
+        font-weight: 900; color: var(--amber); font-size: .98rem; text-align: left;
+      }
+      .dd-cat .arrow { font-size: .68rem; transition: transform .15s ease; }
+      .dd-cat.open { background: var(--amber-bg); }
+      .dd-cat.open .arrow { transform: rotate(90deg); }
+      .dd-items { padding: 2px 0 4px; }
+      .dd-item {
+        width: 100%; border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 7px 14px; min-height: 2.25rem;
+        font-size: 1rem; font-weight: 600; color: var(--ink); text-align: center;
+      }
+      .dd-item:hover, .dd-item.hl { background: var(--amber-bg); }
+      .dd-item .bolt { width: 13px; height: 13px; flex: 0 0 auto; }
+      .dd-other {
+        width: 100%; border: none; background: transparent; cursor: pointer;
+        padding: 9px 14px 4px; min-height: 2.25rem;
+        color: var(--amber); font-weight: 800; font-style: italic; font-size: 1rem; text-align: center;
+      }
+      .dd-other:hover, .dd-other.hl { background: var(--amber-bg); }
+      .dd-empty { padding: 12px 16px; color: var(--muted); font-weight: 700; text-align: center; }
+
+      /* ---------- Help box ---------- */
+      .help-box {
+        margin: 16px 14px 4px;
+        background: var(--help-bg);
+        border: 2px dashed var(--help-line);
+        border-radius: 12px;
+        padding: 16px 18px;
+        display: grid; grid-template-columns: 1fr auto; gap: 8px 18px; align-items: center;
+      }
+      .help-box h3 { margin: 0 0 10px; color: #274b73; font-size: 1.02rem; font-weight: 900; letter-spacing: .05em; }
+      @media (prefers-color-scheme: dark) { .help-box h3 { color: #a9c6e4; } }
+      .help-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+      .help-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 1rem; }
+      .help-steps .n {
+        flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+        background: #274b73; color: #fff; font-weight: 900; font-size: .85rem;
+        display: grid; place-items: center; margin-top: 1px;
+      }
+      .help-steps b { font-weight: 900; }
+      .help-art { width: 250px; max-width: 38vw; height: auto; }
+      .legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; font-weight: 700; }
+      .legend span { display: inline-flex; align-items: center; gap: 8px; }
+      .swatch { width: 17px; height: 17px; border-radius: 5px; display: inline-block; }
+      .swatch.ok { border: 2.5px solid var(--ok); background: var(--ok-bg); }
+      .swatch.miss { border: 2.5px solid var(--missing); }
+      .swatch.calc { background: var(--calc-bg); border: 2.5px solid var(--input-border); }
+
+      /* ---------- Actions ---------- */
+      .actions {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        padding: 16px 14px 18px;
+      }
+      .btn-add {
+        background: var(--green-btn); color: #fff; border: none; border-radius: 10px;
+        font-weight: 900; font-size: 1.02rem; padding: 10px 20px; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 8px; min-height: 2.75rem;
+      }
+      .btn-add:hover { background: var(--green-btn-hover); }
+      .btn-basics {
+        background: var(--card-bg); color: var(--green-btn);
+        border: 2px solid var(--green-btn); border-radius: 10px;
+        font-weight: 900; font-size: 1.02rem; padding: 9px 18px; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 8px; min-height: 2.75rem;
+      }
+      .btn-basics:hover { background: var(--ok-bg); }
+      .row-count { margin-left: auto; color: var(--muted); font-weight: 800; font-size: 1rem; }
+
+      /* ---------- Totals + send ---------- */
+      .totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+      .stat { background: var(--row-alt); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; text-align: center; }
+      .stat .v { font-size: 1.5rem; font-weight: 900; }
+      .stat .v small { font-size: .95rem; font-weight: 800; color: var(--muted); }
+      .stat .l { font-size: .82rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+      .btn-wa {
+        width: 100%; border: none; border-radius: 12px; cursor: pointer;
+        background: var(--wa); color: #fff;
+        font-weight: 900; font-size: 1.15rem; padding: 14px 18px; min-height: 3.4rem;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+      }
+      .btn-wa:hover { background: var(--wa-hover); }
+      .btn-wa svg { width: 24px; height: 24px; flex: 0 0 auto; }
+      .send-note { text-align: center; color: var(--muted); font-weight: 700; margin: 10px 0 0; }
+      .send-error {
+        display: none; margin: 0 0 12px; padding: 10px 14px; border-radius: 10px;
+        background: var(--del-bg); color: var(--del-ink); font-weight: 800; text-align: center;
+      }
+      .send-error.show { display: block; }
+
+      /* ---------- Mobile: rows become cards ---------- */
+      @media (max-width: 760px) {
+        .wrap { padding: 12px 10px 32px; }
+        .card-head h2 { font-size: 1.25rem; }
+        .card-head p { font-size: .92rem; }
+        .contact-grid { grid-template-columns: 1fr; }
+        .thead { display: none; }
+        .trow {
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-areas:
+            "num desc desc"
+            "watts arr cant"
+            "motor horas del"
+            "wtot wtot wh";
+          row-gap: 10px; column-gap: 10px;
+          padding: 14px;
+          position: relative;
+        }
+        .trow .c-num { grid-area: num; align-self: start; }
+        .trow .c-desc { grid-area: desc; }
+        .trow .c-watts { grid-area: watts; }
+        .trow .c-arr { grid-area: arr; }
+        .trow .c-cant { grid-area: cant; }
+        .trow .c-motor { grid-area: motor; }
+        .trow .c-horas { grid-area: horas; }
+        .trow .c-del { grid-area: del; justify-self: end; }
+        .trow .c-wtot { grid-area: wtot; }
+        .trow .c-wh { grid-area: wh; }
+        .flabel { display: block; font-size: .7rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--head-ink); margin-bottom: 4px; }
+        .calc { display: flex; align-items: baseline; justify-content: center; gap: 7px; }
+        .calc .flabel { margin: 0; }
+        .help-box { grid-template-columns: 1fr; }
+        .help-art { margin: 4px auto 0; max-width: 260px; width: 100%; }
+        .totals { grid-template-columns: 1fr; }
+        .row-count { margin-left: 0; width: 100%; }
+        .dropdown { width: min(320px, calc(100vw - 56px)); }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+
+      <!-- Paso 1 · Datos de contacto -->
+      <section class="card" aria-labelledby="h-paso1">
+        <header class="card-head">
+          <span class="step-num" aria-hidden="true">1</span>
+          <h2 id="h-paso1">Tus datos</h2>
+          <p>Para enviarte la cotización</p>
+        </header>
+        <div class="card-body">
+          <div class="contact-grid">
+            <div class="field">
+              <label for="c-nombre">Nombre completo</label>
+              <input id="c-nombre" type="text" autocomplete="name" placeholder="Ej. María González" />
+            </div>
+            <div class="field">
+              <label for="c-tel">WhatsApp</label>
+              <input id="c-tel" type="tel" autocomplete="tel" inputmode="tel" placeholder="Ej. 300 123 4567" />
+            </div>
+            <div class="field">
+              <label for="c-ciudad">Ciudad o municipio</label>
+              <input id="c-ciudad" type="text" autocomplete="address-level2" placeholder="Ej. Medellín" />
+            </div>
+            <div class="field">
+              <label for="c-tipo">Tipo de lugar</label>
+              <select id="c-tipo">
+                <option value="">Selecciona…</option>
+                <option>Casa</option>
+                <option>Apartamento</option>
+                <option>Finca</option>
+                <option>Negocio</option>
+                <option>Otro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Paso 2 · Tabla de cargas -->
+      <section class="card" aria-labelledby="h-paso2">
+        <header class="card-head">
+          <span class="step-num" aria-hidden="true">2</span>
+          <h2 id="h-paso2">Tabla de cargas</h2>
+          <p>Lista los equipos que vas a alimentar</p>
+        </header>
+
+        <div class="thead" aria-hidden="true">
+          <span>#</span><span>Descripción</span><span class="r">Watts</span><span class="r">Arr.</span>
+          <span class="r">Cant.</span><span>Motor</span><span class="r">H/día</span>
+          <span class="r">W tot.</span><span class="r">Wh/día</span><span></span>
+        </div>
+        <div id="rows"></div>
+
+        <div class="help-box">
+          <div>
+            <h3>CÓMO LLENAR LA TABLA</h3>
+            <ol class="help-steps">
+              <li><span class="n">1</span><span><b>Equipo</b> · toca la flecha, elige la categoría y el equipo</span></li>
+              <li><span class="n">2</span><span><b>Watts y cantidad</b> · dato de la etiqueta</span></li>
+              <li><span class="n">3</span><span><b>Horas por día</b> · cuántas horas se usa</span></li>
+              <li><span class="n">4</span><span><b>¿Motor?</b> · elige Sí y escribe su factor de arranque</span></li>
+            </ol>
+          </div>
+          <svg class="help-art" viewBox="0 0 260 168" role="img" aria-label="Casa con paneles solares, inversor y batería">
+            <circle cx="216" cy="34" r="15" fill="#f6a821"/>
+            <g stroke="#f6a821" stroke-width="3" stroke-linecap="round">
+              <line x1="216" y1="8" x2="216" y2="14"/><line x1="216" y1="54" x2="216" y2="60"/>
+              <line x1="190" y1="34" x2="196" y2="34"/><line x1="236" y1="34" x2="242" y2="34"/>
+              <line x1="198" y1="16" x2="202" y2="20"/><line x1="230" y1="48" x2="234" y2="52"/>
+              <line x1="234" y1="16" x2="230" y2="20"/><line x1="202" y1="48" x2="198" y2="52"/>
+            </g>
+            <polygon points="30,84 118,34 206,84" fill="#c3cfda"/>
+            <g fill="#274b73" stroke="#dfe9f2" stroke-width="1.5">
+              <polygon points="118,52 140,40 152,48 130,60"/>
+              <polygon points="134,62 156,50 168,58 146,70"/>
+              <polygon points="102,62 124,50 136,58 114,70"/>
+            </g>
+            <rect x="52" y="84" width="132" height="62" fill="#eef3f7"/>
+            <rect x="66" y="106" width="20" height="40" fill="#8fa5b8"/>
+            <rect x="128" y="100" width="30" height="24" fill="#bcd6ea"/>
+            <line x1="143" y1="100" x2="143" y2="124" stroke="#eef3f7" stroke-width="2"/>
+            <g stroke="#f6a821" stroke-width="1.6" stroke-dasharray="4 3" fill="none">
+              <path d="M150 62 L196 108"/>
+              <path d="M168 66 L206 104"/>
+            </g>
+            <rect x="188" y="106" width="24" height="32" rx="3" fill="#22303f"/>
+            <text x="200" y="127" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">~</text>
+            <rect x="218" y="106" width="24" height="32" rx="3" fill="#4c8a4f"/>
+            <text x="230" y="120" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">+</text>
+            <text x="230" y="133" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">−</text>
+            <text x="200" y="152" text-anchor="middle" font-size="9.5" fill="#75828f" font-weight="bold">Inversor</text>
+            <text x="230" y="152" text-anchor="middle" font-size="9.5" fill="#75828f" font-weight="bold">Batería</text>
+            <rect x="8" y="146" width="244" height="7" rx="3.5" fill="#cfe3c8"/>
+          </svg>
+          <div class="legend">
+            <span><i class="swatch ok"></i> Completo</span>
+            <span><i class="swatch miss"></i> Falta un dato</span>
+            <span><i class="swatch calc"></i> Calculado por la app</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-add" id="btn-add">
+            <svg width="15" height="15" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+            Agregar carga
+          </button>
+          <button type="button" class="btn-basics" id="btn-basics">
+            <svg width="17" height="15" viewBox="0 0 18 16" aria-hidden="true"><path d="M6 3h11M6 8h11M6 13h11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M1.5 5.5v5M-1 8h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" transform="translate(1.5 0)"/></svg>
+            Agregar equipos básicos
+          </button>
+          <span class="row-count" id="row-count">5 cargas</span>
+        </div>
+      </section>
+
+      <!-- Envío -->
+      <section class="card" aria-labelledby="h-envio">
+        <header class="card-head">
+          <span class="step-num" aria-hidden="true">3</span>
+          <h2 id="h-envio">Enviar</h2>
+          <p>Tu tabla llega directo a ELECTRYN</p>
+        </header>
+        <div class="card-body">
+          <p class="send-error" id="send-error" role="alert"></p>
+          <div class="totals">
+            <div class="stat"><div class="v"><span id="t-equipos">0</span></div><div class="l">Equipos</div></div>
+            <div class="stat"><div class="v"><span id="t-watts">0</span> <small>W</small></div><div class="l">Potencia total</div></div>
+            <div class="stat"><div class="v"><span id="t-wh">0</span> <small>Wh/día</small></div><div class="l">Consumo diario</div></div>
+          </div>
+          <button type="button" class="btn-wa" id="btn-send">
+            <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91A9.86 9.86 0 0 0 12.04 2m0 18.13h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24a8.2 8.2 0 0 1 8.24 8.25c0 4.54-3.7 8.23-8.24 8.23m4.52-6.16c-.25-.13-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.13-1.05-.38-2-1.23-.73-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.68.31-.25.25-1 1-1 2.37s1.02 2.65 1.16 2.83c.15.18 2 3.05 4.84 4.27.68.29 1.2.47 1.62.6.68.22 1.3.19 1.79.12.55-.08 1.67-.68 2.13-1.33.42-.6.42-1.11.3-1.22-.13-.11-.23-.17-.48-.3"/></svg>
+            Enviar por WhatsApp
+          </button>
+          <p class="send-note">Se abre WhatsApp con tu tabla lista para enviar a ELECTRYN. Si no sabes los watts de un equipo, déjalos en blanco y nosotros los completamos.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      "use strict";
+
+      /* Catálogo tal como aparece en las capturas. w = watts sugeridos (editables),
+         m = equipo con motor (rayo): activa el factor de arranque. */
+      var CATALOG = [
+        { cat: "Iluminación básica", items: [
+          { n: "Bombillo LED", w: 9 },
+          { n: "Bombillo ahorrador", w: 15 },
+          { n: "Bombillo incandescente", w: 50 },
+          { n: "Bombillo de exterior", w: 20 },
+          { n: "Celular (cargador)", w: 10 },
+          { n: "Timbre", w: 5 }
+        ]},
+        { cat: "Oficina / cómputo", items: [
+          { n: "Computador portátil", w: 65 },
+          { n: "Computador de escritorio", w: 200 },
+          { n: "Impresora", w: 50 },
+          { n: "Router / módem", w: 10 }
+        ]},
+        { cat: "Cocina", items: [
+          { n: "Horno microondas", w: 1200 },
+          { n: "Licuadora", w: 400, m: 1 },
+          { n: "Cocina de inducción (1 puesto)", w: 1500 },
+          { n: "Olla arrocera", w: 400 },
+          { n: "Cafetera", w: 800 }
+        ]},
+        { cat: "Confort / clima", items: [
+          { n: "Ventilador de techo", w: 75, m: 1 },
+          { n: "Televisor", w: 100 },
+          { n: "Equipo de sonido", w: 100 },
+          { n: "Aire acondicionado (ventana)", w: 1200, m: 1 },
+          { n: "Calentador eléctrico ambiente", w: 1500 },
+          { n: "Ducha eléctrica / calentador de agua", w: 4500 }
+        ]},
+        { cat: "Herramientas / taller", items: [
+          { n: "Taladro", w: 600, m: 1 },
+          { n: "Esmeril / pulidora", w: 800, m: 1 },
+          { n: "Motosierra eléctrica", w: 1800, m: 1 },
+          { n: "Plancha de ropa", w: 1200 }
+        ]},
+        { cat: "Refrigerador / lavado", items: [
+          { n: "Nevera", w: 120, m: 1 },
+          { n: "Congelador", w: 150, m: 1 },
+          { n: "Lavadora", w: 500, m: 1 }
+        ]},
+        { cat: "Agropecuario / finca", items: [
+          { n: "Bomba de agua doméstica", w: 370, m: 1 },
+          { n: "Motobomba de riego", w: 750, m: 1 },
+          { n: "Ordeñadora eléctrica", w: 750 },
+          { n: "Cerca eléctrica (electrificador)", w: 10 },
+          { n: "Incubadora", w: 100 },
+          { n: "Bebedero automático con bomba", w: 100, m: 1 },
+          { n: "Picadora de pasto/forraje", w: 1500, m: 1 }
+        ]}
+      ];
+
+      var BASICS = [
+        { n: "Bombillo LED", w: 9, cant: 5, h: 6 },
+        { n: "Nevera", w: 120, m: 1, cant: 1, h: 24 },
+        { n: "Televisor", w: 100, cant: 1, h: 4 },
+        { n: "Ventilador de techo", w: 75, m: 1, cant: 1, h: 8 },
+        { n: "Router / módem", w: 10, cant: 1, h: 24 },
+        { n: "Celular (cargador)", w: 10, cant: 2, h: 2 }
+      ];
+
+      var WA_NUMBER = "573128415599"; // WhatsApp Business de ELECTRYN
+      var BOLT = '<svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.8 22 19 9.8h-6.5L13 2z" fill="#f6a821"/></svg>';
+      var XICON = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+      var rowsEl = document.getElementById("rows");
+      var dropdown = null;      // elemento desplegable compartido
+      var activeInput = null;   // input de descripción activo
+      var expandedCats = {};    // categorías abiertas en modo sin filtro
+      var hlIndex = -1;         // índice resaltado con teclado
+
+      function norm(s) {
+        return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      function fmt(n) {
+        return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      function num(v) {
+        var x = parseFloat(String(v).replace(",", "."));
+        return isNaN(x) || x < 0 ? 0 : x;
+      }
+
+      /* ---------------- Filas ---------------- */
+      function makeRow() {
+        var row = document.createElement("div");
+        row.className = "trow";
+        row.innerHTML =
+          '<div class="c-num"><span class="num-badge"></span></div>' +
+          '<div class="c-desc"><span class="flabel">Descripción</span><div class="desc-wrap">' +
+            '<input class="f-desc" type="text" placeholder="Elige un equipo…" autocomplete="off" />' +
+            '<button type="button" class="dd-toggle" aria-label="Ver categorías de equipos" aria-haspopup="listbox">' +
+              '<svg viewBox="0 0 14 9" aria-hidden="true"><path d="M1.5 1.5 7 7l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '</button>' +
+          '</div></div>' +
+          '<div class="c-watts"><span class="flabel">Watts</span><input class="f-watts" type="number" min="0" inputmode="numeric" placeholder="0" /></div>' +
+          '<div class="c-arr"><span class="flabel">Arr.</span><input class="f-arr" type="number" min="1" step="0.5" inputmode="decimal" placeholder="--" disabled /></div>' +
+          '<div class="c-cant"><span class="flabel">Cant.</span><input class="f-cant" type="number" min="1" inputmode="numeric" value="1" /></div>' +
+          '<div class="c-motor"><span class="flabel">Motor</span><select class="f-motor"><option value="No">No</option><option value="Sí">Sí</option></select></div>' +
+          '<div class="c-horas"><span class="flabel">H/día</span><input class="f-horas" type="number" min="0" max="24" step="0.5" inputmode="decimal" placeholder="h/día" /></div>' +
+          '<div class="calc c-wtot"><span class="flabel">W tot.</span><span class="f-wtot">0</span></div>' +
+          '<div class="calc c-wh"><span class="flabel">Wh/día</span><span class="f-wh">0</span></div>' +
+          '<div class="c-del"><button type="button" class="btn-del" aria-label="Eliminar esta carga">' + XICON + '</button></div>';
+
+        var desc = row.querySelector(".f-desc");
+        desc.addEventListener("focus", function () { if (activeInput !== desc) openDropdown(desc); });
+        desc.addEventListener("click", function () { if (activeInput !== desc) openDropdown(desc); });
+        row.querySelector(".dd-toggle").addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          if (dropdown && activeInput === desc) { closeDropdown(); }
+          else { openDropdown(desc); desc.focus(); }
+        });
+        desc.addEventListener("input", function () {
+          if (activeInput !== desc) openDropdown(desc); else renderDropdown();
+          recalc();
+        });
+        desc.addEventListener("keydown", onDescKeydown);
+
+        row.querySelector(".f-motor").addEventListener("change", function () { syncMotor(row); recalc(); });
+        row.querySelector(".btn-del").addEventListener("click", function () {
+          if (rowsEl.children.length <= 1) { clearRow(row); }
+          else { row.remove(); }
+          renumber(); recalc();
+        });
+        ["f-watts", "f-arr", "f-cant", "f-horas"].forEach(function (cls) {
+          row.querySelector("." + cls).addEventListener("input", recalc);
+        });
+        return row;
+      }
+
+      function clearRow(row) {
+        row.querySelector(".f-desc").value = "";
+        row.querySelector(".f-watts").value = "";
+        row.querySelector(".f-arr").value = "";
+        row.querySelector(".f-cant").value = 1;
+        row.querySelector(".f-horas").value = "";
+        row.querySelector(".f-motor").value = "No";
+        syncMotor(row);
+      }
+
+      function renumber() {
+        var rows = rowsEl.children;
+        for (var i = 0; i < rows.length; i++) {
+          rows[i].querySelector(".num-badge").textContent = i + 1;
+        }
+        document.getElementById("row-count").textContent =
+          rows.length + (rows.length === 1 ? " carga" : " cargas");
+      }
+
+      function syncMotor(row) {
+        var isMotor = row.querySelector(".f-motor").value === "Sí";
+        var arr = row.querySelector(".f-arr");
+        arr.disabled = !isMotor;
+        arr.placeholder = isMotor ? "3.5" : "--";
+        if (!isMotor) arr.value = "";
+      }
+
+      function fillRow(row, item) {
+        row.querySelector(".f-desc").value = item.n;
+        if (item.w != null) row.querySelector(".f-watts").value = item.w;
+        if (item.cant != null) row.querySelector(".f-cant").value = item.cant;
+        if (item.h != null) row.querySelector(".f-horas").value = item.h;
+        row.querySelector(".f-motor").value = item.m ? "Sí" : "No";
+        syncMotor(row);
+        if (item.m && !row.querySelector(".f-arr").value) row.querySelector(".f-arr").value = "3.5";
+      }
+
+      /* ---------------- Desplegable del catálogo ---------------- */
+      function openDropdown(input) {
+        closeDropdown();
+        activeInput = input;
+        dropdown = document.createElement("div");
+        dropdown.className = "dropdown";
+        dropdown.setAttribute("role", "listbox");
+        input.parentNode.appendChild(dropdown);
+        // Al abrir, se muestran las 7 categorías para elegir; cada una se
+        // despliega con sus equipos al tocarla. Sin texto no se abre ninguna.
+        expandedCats = {};
+        hlIndex = -1;
+        var tog = input.parentNode.querySelector(".dd-toggle");
+        if (tog) tog.classList.add("open");
+        renderDropdown();
+      }
+
+      function closeDropdown() {
+        if (dropdown) { dropdown.remove(); dropdown = null; }
+        activeInput = null;
+        hlIndex = -1;
+        Array.prototype.forEach.call(document.querySelectorAll(".dd-toggle.open"), function (t) {
+          t.classList.remove("open");
+        });
+      }
+
+      function renderDropdown() {
+        if (!dropdown || !activeInput) return;
+        var q = norm(activeInput.value.trim());
+        var html = "";
+        var anyVisible = false;
+
+        CATALOG.forEach(function (group) {
+          var matches = group.items.filter(function (it) {
+            return !q || norm(it.n).indexOf(q) !== -1 || norm(group.cat).indexOf(q) !== -1;
+          });
+          if (!matches.length) return;
+          anyVisible = true;
+          var open = q ? true : !!expandedCats[group.cat];
+          html += '<button type="button" class="dd-cat' + (open ? " open" : "") + '" data-cat="' +
+            group.cat.replace(/"/g, "&quot;") + '"><span class="arrow">▸</span>' + group.cat + "</button>";
+          if (open) {
+            html += '<div class="dd-items">';
+            matches.forEach(function (it) {
+              html += '<button type="button" class="dd-item" data-name="' + it.n.replace(/"/g, "&quot;") + '">' +
+                "<span>" + it.n + "</span>" + (it.m ? BOLT : "") + "</button>";
+            });
+            html += "</div>";
+          }
+        });
+
+        if (!anyVisible) html += '<div class="dd-empty">No está en el catálogo. Escríbelo y elige “Otra”.</div>';
+        html += '<button type="button" class="dd-other">Otra (ingresar manual)</button>';
+        dropdown.innerHTML = html;
+
+        dropdown.querySelectorAll(".dd-cat").forEach(function (btn) {
+          btn.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var c = btn.getAttribute("data-cat");
+            var wasOpen = !!expandedCats[c];
+            expandedCats = {}; // acordeón: una sola categoría desplegada
+            if (!wasOpen) expandedCats[c] = true;
+            renderDropdown();
+          });
+        });
+        dropdown.querySelectorAll(".dd-item").forEach(function (btn) {
+          btn.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            pickItem(btn.getAttribute("data-name"));
+          });
+        });
+        var other = dropdown.querySelector(".dd-other");
+        other.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var inp = activeInput;
+          closeDropdown();
+          if (inp) inp.focus();
+        });
+        applyHighlight();
+      }
+
+      function findItem(name) {
+        for (var i = 0; i < CATALOG.length; i++) {
+          for (var j = 0; j < CATALOG[i].items.length; j++) {
+            if (CATALOG[i].items[j].n === name) return CATALOG[i].items[j];
+          }
+        }
+        return null;
+      }
+
+      function pickItem(name) {
+        var item = findItem(name);
+        var inp = activeInput;
+        if (!item || !inp) { closeDropdown(); return; }
+        var row = inp.closest(".trow");
+        fillRow(row, item);
+        closeDropdown();
+        recalc();
+        var watts = row.querySelector(".f-watts");
+        watts.focus();
+        watts.select();
+      }
+
+      function visiblePickables() {
+        if (!dropdown) return [];
+        return Array.prototype.slice.call(dropdown.querySelectorAll(".dd-item, .dd-other"));
+      }
+      function applyHighlight() {
+        var items = visiblePickables();
+        items.forEach(function (el, i) { el.classList.toggle("hl", i === hlIndex); });
+        if (items[hlIndex]) items[hlIndex].scrollIntoView({ block: "nearest" });
+      }
+      function onDescKeydown(e) {
+        if (!dropdown) return;
+        var items = visiblePickables();
+        if (e.key === "Escape") { closeDropdown(); }
+        else if (e.key === "ArrowDown") { e.preventDefault(); hlIndex = Math.min(hlIndex + 1, items.length - 1); applyHighlight(); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); hlIndex = Math.max(hlIndex - 1, 0); applyHighlight(); }
+        else if (e.key === "Enter" && hlIndex >= 0 && items[hlIndex]) {
+          e.preventDefault();
+          if (items[hlIndex].classList.contains("dd-item")) pickItem(items[hlIndex].getAttribute("data-name"));
+          else { var inp = activeInput; closeDropdown(); if (inp) inp.focus(); }
+        }
+      }
+
+      document.addEventListener("mousedown", function (e) {
+        if (!dropdown) return;
+        // La ruta del evento se captura al despacharlo: sigue siendo válida
+        // aunque un handler previo haya re-renderizado el desplegable y el
+        // botón tocado ya no esté en el DOM (closest() daría null y se
+        // cerraría el menú al tocar una categoría).
+        var path = e.composedPath ? e.composedPath() : [];
+        for (var i = 0; i < path.length; i++) {
+          if (path[i] === dropdown) return;
+          if (path[i].classList && path[i].classList.contains("desc-wrap")) return;
+        }
+        if (e.target.closest && e.target.closest(".desc-wrap")) return;
+        closeDropdown();
+      });
+
+      /* ---------------- Cálculos ---------------- */
+      function rowData(row) {
+        return {
+          desc: row.querySelector(".f-desc").value.trim(),
+          watts: num(row.querySelector(".f-watts").value),
+          arr: num(row.querySelector(".f-arr").value),
+          cant: Math.max(0, Math.floor(num(row.querySelector(".f-cant").value))),
+          motor: row.querySelector(".f-motor").value === "Sí",
+          horas: num(row.querySelector(".f-horas").value)
+        };
+      }
+
+      function mark(input, state) {
+        input.classList.remove("ok", "missing", "missing-soft");
+        if (state) input.classList.add(state);
+      }
+
+      function recalc() {
+        var totalW = 0, totalWh = 0, equipos = 0;
+        Array.prototype.forEach.call(rowsEl.children, function (row) {
+          var d = rowData(row);
+          var wtot = d.watts * d.cant;
+          var wh = wtot * d.horas;
+          row.querySelector(".f-wtot").textContent = fmt(wtot);
+          row.querySelector(".f-wh").textContent = fmt(wh);
+          if (d.desc) { equipos++; totalW += wtot; totalWh += wh; }
+
+          var started = d.desc || d.watts > 0 || d.horas > 0 || d.motor;
+          mark(row.querySelector(".f-desc"), d.desc ? "ok" : "missing");
+          mark(row.querySelector(".f-watts"), d.watts > 0 ? "ok" : (started ? "missing-soft" : ""));
+          mark(row.querySelector(".f-horas"), d.horas > 0 ? "ok" : "missing");
+          var arrIn = row.querySelector(".f-arr");
+          mark(arrIn, d.motor ? (d.arr > 0 ? "ok" : "missing") : "");
+        });
+        document.getElementById("t-equipos").textContent = equipos;
+        document.getElementById("t-watts").textContent = fmt(totalW);
+        document.getElementById("t-wh").textContent = fmt(totalWh);
+      }
+
+      /* ---------------- Botones de la tabla ---------------- */
+      document.getElementById("btn-add").addEventListener("click", function () {
+        var row = makeRow();
+        rowsEl.appendChild(row);
+        renumber(); recalc();
+        row.querySelector(".f-desc").focus();
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+
+      document.getElementById("btn-basics").addEventListener("click", function () {
+        var empties = Array.prototype.filter.call(rowsEl.children, function (r) {
+          return !r.querySelector(".f-desc").value.trim();
+        });
+        BASICS.forEach(function (item, i) {
+          var row = empties[i];
+          if (!row) { row = makeRow(); rowsEl.appendChild(row); }
+          fillRow(row, item);
+        });
+        renumber(); recalc();
+      });
+
+      /* ---------------- Guardado en hoja (pendiente de conexión) ----------------
+         Hoy guardarEnHoja() no hace nada: es un gancho vacío. Cuando Jose elija
+         el camino de guardado (Apps Script del formulario del sitio o puente
+         Google Forms), la conexión se hará aquí dentro, sin tocar el resto de
+         la página. Ver landing/NOTAS-GUARDADO.md. No hay endpoints pegados
+         en este archivo. */
+      function guardarEnHoja(datos) {
+        // TODO: conectar el guardado según la decisión de Jose (ver NOTAS-GUARDADO.md).
+        // Por ahora no hace nada: el envío por WhatsApp sigue siendo el canal principal.
+        void datos;
+      }
+
+      /* ---------------- Envío por WhatsApp ---------------- */
+      document.getElementById("btn-send").addEventListener("click", function () {
+        var errEl = document.getElementById("send-error");
+        var nombre = document.getElementById("c-nombre").value.trim();
+        var tel = document.getElementById("c-tel").value.trim();
+        var ciudad = document.getElementById("c-ciudad").value.trim();
+        var tipo = document.getElementById("c-tipo").value;
+
+        var lines = [], totalW = 0, totalWh = 0, sinWatts = 0, n = 0;
+        Array.prototype.forEach.call(rowsEl.children, function (row) {
+          var d = rowData(row);
+          if (!d.desc) return;
+          n++;
+          var wtot = d.watts * d.cant;
+          var wh = wtot * d.horas;
+          totalW += wtot; totalWh += wh;
+          if (!d.watts) sinWatts++;
+          var s = n + ". " + d.desc + " — " +
+            (d.watts ? fmt(d.watts) + " W" : "Watts: por confirmar") +
+            " × " + (d.cant || 1) +
+            (d.motor ? " · motor" + (d.arr ? " (arranque " + String(d.arr).replace(".", ",") + ")" : "") : "") +
+            " · " + (d.horas ? String(d.horas).replace(".", ",") + " h/día" : "horas: por confirmar") +
+            " → " + fmt(wtot) + " W · " + fmt(wh) + " Wh/día";
+          lines.push(s);
+        });
+
+        var errors = [];
+        if (!nombre) errors.push("tu nombre");
+        if (!n) errors.push("al menos un equipo en la tabla");
+        if (errors.length) {
+          errEl.textContent = "Falta " + errors.join(" y ") + " para poder enviar.";
+          errEl.classList.add("show");
+          errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (!nombre) document.getElementById("c-nombre").classList.add("err");
+          return;
+        }
+        errEl.classList.remove("show");
+        document.getElementById("c-nombre").classList.remove("err");
+
+        // Guardado en hoja (hoy: stub sin efecto; ver guardarEnHoja).
+        guardarEnHoja({
+          nombre: nombre,
+          whatsapp: tel,
+          ciudad: ciudad,
+          tipoLugar: tipo,
+          tablaCompleta: lines.join("\n"),
+          totalW: totalW,
+          totalWhDia: totalWh
+        });
+
+        var msg =
+          "*TABLA DE CARGAS — ELECTRYN*\n" +
+          "Nombre: " + nombre + "\n" +
+          (tel ? "WhatsApp: " + tel + "\n" : "") +
+          (ciudad ? "Ciudad: " + ciudad + "\n" : "") +
+          (tipo ? "Tipo de lugar: " + tipo + "\n" : "") +
+          "\n*Equipos a alimentar:*\n" + lines.join("\n") +
+          "\n\n*TOTALES*\n" +
+          "Potencia total: " + fmt(totalW) + " W\n" +
+          "Consumo diario: " + fmt(totalWh) + " Wh/día (" +
+            (totalWh / 1000).toFixed(2).replace(".", ",") + " kWh/día)" +
+          (sinWatts ? "\nEquipos sin watts (los completa ELECTRYN): " + sinWatts : "");
+
+        window.open("https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(msg), "_blank");
+      });
+
+      /* ---------------- Inicio: 5 casillas; el cliente agrega más con los botones ---------------- */
+      for (var i = 0; i < 5; i++) rowsEl.appendChild(makeRow());
+      renumber();
+      recalc();
+    </script>
+  </body>
+</html>
